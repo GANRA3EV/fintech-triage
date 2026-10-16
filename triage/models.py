@@ -4,6 +4,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.preprocessing import MultiLabelBinarizer
 
+from triage.routing import review_reasons
+
 
 class TicketModel:
     def __init__(self, categories, backend="tfidf", encoder_name="intfloat/multilingual-e5-base"):
@@ -64,9 +66,11 @@ class TicketModel:
             confidence = float(probabilities_row[winner])
             urgency_position = int(np.argmax(urgency[index]))
             urgency_confidence = float(urgency[index, urgency_position])
+            urgency_label = str(self.urgency.classes_[urgency_position])
+            reasons = review_reasons(confidence, urgency_confidence, urgency_label, threshold)
             results.append({"primary": primary, "secondary": self.categories[alternatives[0]] if alternatives else None,
-                            "confidence": confidence, "urgency": str(self.urgency.classes_[urgency_position]),
+                            "confidence": confidence, "urgency": urgency_label,
                             "urgency_confidence": urgency_confidence,
-                            "operator_review": confidence < threshold or urgency_confidence < threshold,
+                            "operator_review": bool(reasons), "review_reasons": reasons,
                             "operator_confirmation_required": True})
         return results
