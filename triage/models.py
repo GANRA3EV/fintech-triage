@@ -8,6 +8,12 @@ from sklearn.preprocessing import MultiLabelBinarizer
 class TicketModel:
     def __init__(self, categories, backend="tfidf", encoder_name="intfloat/multilingual-e5-base"):
         self.categories = list(categories)
+        if len(self.categories) < 2 or len(set(self.categories)) != len(self.categories):
+            raise ValueError("Нужны минимум две уникальные категории")
+        if any(not isinstance(category, str) or not category.strip() for category in self.categories):
+            raise ValueError("Категории должны быть непустыми строками")
+        if backend not in {"tfidf", "e5"}:
+            raise ValueError("Неизвестный способ получения признаков")
         self.backend = backend
         self.encoder_name = encoder_name
         self.encoder = None
@@ -36,6 +42,15 @@ class TicketModel:
         return self
 
     def predict(self, texts, threshold=0.7, secondary_threshold=0.5):
+        texts = list(texts)
+        if any(not isinstance(text, str) or not text.strip() for text in texts):
+            raise ValueError("Для прогноза нужны непустые строки")
+        if not np.isfinite(threshold) or not 0 <= threshold <= 1.01:
+            raise ValueError("Порог уверенности должен находиться между 0 и 1.01")
+        if not np.isfinite(secondary_threshold) or not 0 <= secondary_threshold <= 1:
+            raise ValueError("Порог дополнительной темы должен находиться между 0 и 1")
+        if not texts:
+            return []
         features = self.features(texts)
         probabilities = self.primary.predict_proba(features)
         topics = self.topics.predict_proba(features)
