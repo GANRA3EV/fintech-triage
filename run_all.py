@@ -26,12 +26,12 @@ def main():
     training.add_argument("--categories", default=str(ROOT / "categories.json"))
     training.add_argument("--train-end", required=True)
     training.add_argument("--validation-end", required=True)
-    training.add_argument("--backend", choices=["tfidf", "e5"], default="tfidf")
+    training.add_argument("--backend", choices=["tfidf", "e5", "rubert"], default="tfidf")
     prediction = commands.add_parser("predict")
     prediction.add_argument("--model", required=True)
     prediction.add_argument("--input", required=True)
     prediction.add_argument("--output", required=True)
-    prediction.add_argument("--with-llm", action="store_true")
+    prediction.add_argument("--with-summary", "--with-llm", dest="with_summary", action="store_true")
     args = parser.parse_args()
     logging.info("Запуск команды %s", args.command)
     if args.command == "train":
@@ -46,7 +46,7 @@ def main():
         results = bundle["model"].predict(data.text.tolist(), threshold=bundle["threshold"])
         for result, row in zip(results, data.itertuples()):
             result["digest"] = row.digest
-            if args.with_llm:
+            if args.with_summary:
                 result["draft"] = summarize(row.text, bundle["categories"])
         target = Path(args.output)
         target.parent.mkdir(parents=True, exist_ok=True)

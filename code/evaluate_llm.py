@@ -28,7 +28,7 @@ def main():
                   for index, result in enumerate(results)]).to_excel(target / "manual_review.xlsx", index=False)
     (target / "llm_metrics.json").write_text(json.dumps({
         "rows": len(results), "validated_draft_fraction": valid / len(results),
-        "limitation": "Доля учитывает схему и цитаты; смысловую точность оценивает оператор. Ошибки сети входят в отказы."
+        "limitation": "Доля учитывает получение локального резюме; полноту оценивает оператор. Ошибки загрузки весов входят в отказы."
     }, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"Созданы файлы: {target / 'manual_review.xlsx'}, {target / 'llm_metrics.json'}")
 

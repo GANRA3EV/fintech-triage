@@ -1,6 +1,5 @@
 import json
 
-import httpx
 import pandas as pd
 import pytest
 
@@ -82,21 +81,22 @@ def test_classifier_and_abstention():
     assert result["operator_review"] and result["operator_confirmation_required"]
 
 
-@pytest.mark.parametrize("content, expected", [
-    ({"summary": "Карта заблокирована", "evidence": ["карта"], "fields": []}, "draft"),
-    ({"summary": "Карта", "evidence": ["нет в сообщении"], "fields": []}, "invalid_or_unavailable"),
-    ({"summary": "Карта", "evidence": ["карта"], "fields": [], "extra": True}, "invalid_or_unavailable"),
-])
-def test_llm_validation(content, expected):
-    def handler(request):
-        return httpx.Response(200, json={"choices": [{"message": {"content": json.dumps(content)}}]})
-    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
-        result = summarize("Моя карта заблокирована", {}, client=client)
-    assert result["status"] == expected
+def test_local_summary_quotes_source():
+    import numpy as np
+    class Encoder:
+        def encode(self, texts):
+            return np.ones((len(texts), 3))
+    text = "Моя карта заблокирована. Перевод не проходит. Нужна проверка."
+    result = summarize(text, {}, encoder=Encoder())
+    assert result["status"] == "draft"
+    assert all(quote in text for quote in result["result"]["evidence"])
+    assert result["method"] == "extractive"
 
 
-def test_llm_timeout_falls_back():
-    def handler(request):
-        raise httpx.ReadTimeout("timeout")
-    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
-        assert summarize("Карта", {}, client=client)["operator_review"]
+def test_local_summary_failure_falls_back():
+    class Encoder:
+        def encode(self, texts):
+            raise RuntimeError("private details")
+    result = summarize("Карта.", {}, encoder=Encoder())
+    assert result["operator_review"] and result["result"] is None
+    assert "private details" not in str(result)

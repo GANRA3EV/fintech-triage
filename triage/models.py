@@ -8,16 +8,18 @@ from triage.routing import review_reasons
 
 
 class TicketModel:
-    def __init__(self, categories, backend="tfidf", encoder_name="intfloat/multilingual-e5-base"):
+    def __init__(self, categories, backend="tfidf", encoder_name=None, encoder_revision=None):
         self.categories = list(categories)
         if len(self.categories) < 2 or len(set(self.categories)) != len(self.categories):
             raise ValueError("Нужны минимум две уникальные категории")
         if any(not isinstance(category, str) or not category.strip() for category in self.categories):
             raise ValueError("Категории должны быть непустыми строками")
-        if backend not in {"tfidf", "e5"}:
+        if backend not in {"tfidf", "e5", "rubert"}:
             raise ValueError("Неизвестный способ получения признаков")
         self.backend = backend
-        self.encoder_name = encoder_name
+        from triage.local_hf import MODEL_NAME, MODEL_REVISION
+        self.encoder_name = encoder_name or (MODEL_NAME if backend == "rubert" else "intfloat/multilingual-e5-base")
+        self.encoder_revision = encoder_revision or (MODEL_REVISION if backend == "rubert" else None)
         self.encoder = None
 
     def features(self, texts, fit=False):
@@ -26,6 +28,11 @@ class TicketModel:
                 self.vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_features=50000, sublinear_tf=True)
                 return self.vectorizer.fit_transform(texts)
             return self.vectorizer.transform(texts)
+        if self.backend == "rubert":
+            from triage.local_hf import get_encoder
+            if self.encoder is None:
+                self.encoder = get_encoder(self.encoder_name, self.encoder_revision)
+            return self.encoder.encode(list(texts))
         if self.encoder is None:
             from sentence_transformers import SentenceTransformer
             self.encoder = SentenceTransformer(self.encoder_name)

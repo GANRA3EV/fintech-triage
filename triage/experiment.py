@@ -81,9 +81,10 @@ def train(input_path, output, config_path, train_end, validation_end, backend):
         "config_sha256": hashlib.sha256(Path(config_path).read_bytes()).hexdigest(),
         "train_end": train_end, "validation_end": validation_end, "backend": backend,
         "encoder": model.encoder_name, "seed": 42,
+        "encoder_revision": getattr(model, "encoder_revision", None),
         "python": platform.python_version(),
         "packages": {name: importlib.metadata.version(name) for name in
-                     ("pandas", "scikit-learn", "pydantic", "openpyxl", "httpx", "joblib")},
+                     ("pandas", "scikit-learn", "openpyxl", "joblib")},
         "limitations": ["Вероятности не калиброваны", "Порог проверен только на validation",
                         "Корреляции числовых идентификаторов не имеют прикладного смысла",
                         "Регулярные выражения не удаляют все персональные данные"]})
