@@ -82,6 +82,8 @@ def train(input_path, output, config_path, train_end, validation_end, backend):
         "train_end": train_end, "validation_end": validation_end, "backend": backend,
         "encoder": model.encoder_name, "seed": 42,
         "encoder_revision": getattr(model, "encoder_revision", None),
+        "local_hf_packages": {name: importlib.metadata.version(name) for name in
+                              ("torch", "transformers")} if backend == "rubert" else None,
         "python": platform.python_version(),
         "packages": {name: importlib.metadata.version(name) for name in
                      ("pandas", "scikit-learn", "openpyxl", "joblib")},

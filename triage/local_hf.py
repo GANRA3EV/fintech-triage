@@ -33,5 +33,9 @@ class LocalEncoder:
 
 
 @lru_cache(maxsize=2)
-def get_encoder(name=MODEL_NAME, revision=MODEL_REVISION):
+def _cached_encoder(name, revision):
     return LocalEncoder(name, revision)
+
+
+def get_encoder(name=MODEL_NAME, revision=MODEL_REVISION):
+    return _cached_encoder(name, revision)

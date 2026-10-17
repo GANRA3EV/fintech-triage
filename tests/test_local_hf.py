@@ -55,3 +55,13 @@ def test_real_hf_cpu_and_summary():
                           "urgency": ["high", "high", "normal", "normal"]})
     model = TicketModel(["card", "transfer"], backend="rubert").fit(frame)
     assert len(model.predict(["Не работает моя карта"])) == 1
+
+
+def test_encoder_cache_normalizes_default_arguments(monkeypatch):
+    import triage.local_hf as hf
+    hf._cached_encoder.cache_clear()
+    monkeypatch.setattr(hf, "LocalEncoder", lambda *args: object())
+    try:
+        assert hf.get_encoder() is hf.get_encoder(hf.MODEL_NAME, hf.MODEL_REVISION)
+    finally:
+        hf._cached_encoder.cache_clear()
