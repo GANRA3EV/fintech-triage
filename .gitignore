@@ -7,3 +7,4 @@ data/
 artifacts/
 logs/
 *.joblib
+articles/

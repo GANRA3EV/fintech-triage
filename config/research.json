@@ -1,0 +1,8 @@
+{
+  "backends": ["majority", "tfidf", "rubert"],
+  "train_end": "2025-02-01",
+  "validation_end": "2025-03-01",
+  "bootstrap_repetitions": 1000,
+  "seed": 42,
+  "data_kind": "synthetic"
+}

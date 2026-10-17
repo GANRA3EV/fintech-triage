@@ -20,6 +20,11 @@ def main():
                         format="%(asctime)s %(levelname)s %(message)s")
     parser = argparse.ArgumentParser(description="Обработка обращений для оператора")
     commands = parser.add_subparsers(dest="command", required=True)
+    study = commands.add_parser('study')
+    study.add_argument('--input', required=True)
+    study.add_argument('--config', default=str(ROOT / 'config' / 'research.json'))
+    study.add_argument('--categories', default=str(ROOT / 'categories.json'))
+    study.add_argument('--output', required=True)
     training = commands.add_parser("train")
     training.add_argument("--input", required=True)
     training.add_argument("--output", default=str(ROOT / "artifacts"))
@@ -34,7 +39,11 @@ def main():
     prediction.add_argument("--with-summary", "--with-llm", dest="with_summary", action="store_true")
     args = parser.parse_args()
     logging.info("Запуск команды %s", args.command)
-    if args.command == "train":
+    if args.command == 'study':
+        from triage.study import run_study
+        if not run_study(args.input, args.config, args.categories, args.output):
+            raise SystemExit(1)
+    elif args.command == "train":
         metrics = train(args.input, args.output, args.categories, args.train_end, args.validation_end, args.backend)
         print(json.dumps(metrics, ensure_ascii=False, indent=2))
         print("Созданы файлы:")

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fintech-triage"
-version = "0.3.0"
+version = "0.4.0"
 description = "Подготовка обращений финтех-сервиса для оператора"
 requires-python = ">=3.11,<3.15"
 dependencies = ["pandas>=2.2,<4", "scikit-learn>=1.5,<2", "openpyxl>=3.1,<4", "joblib>=1.4,<2"]
@@ -12,6 +12,7 @@ dependencies = ["pandas>=2.2,<4", "scikit-learn>=1.5,<2", "openpyxl>=3.1,<4", "j
 [project.optional-dependencies]
 embeddings = ["sentence-transformers>=3,<6"]
 dev = ["pytest>=8,<10"]
+research = ["matplotlib>=3.9,<4", "psutil>=6,<8"]
 local-hf = ["transformers>=4.57,<6", "torch>=2.6,<3"]
 
 [tool.setuptools.packages.find]

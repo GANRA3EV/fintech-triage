@@ -32,6 +32,7 @@ def prepare(frame: pd.DataFrame, labeled: bool = True) -> pd.DataFrame:
     data["timestamp"] = pd.to_datetime(data["timestamp"], utc=True, errors="raise")
     data["text"] = data["text"].astype(str).map(clean_text)
     data = data.loc[data.text.str.len() > 0].sort_values("timestamp")
+    nonempty_messages = len(data)
     rows = []
     for _, group in data.groupby(["client_id", "conversation_id"], sort=False):
         if labeled:
@@ -50,7 +51,12 @@ def prepare(frame: pd.DataFrame, labeled: bool = True) -> pd.DataFrame:
         conflicts = prepared.fillna("").groupby("digest")[["primary", "secondary", "urgency"]].nunique()
         if conflicts.gt(1).any().any():
             raise ValueError("Дубликаты текста имеют противоречивую разметку")
-    return prepared.drop_duplicates("digest").reset_index(drop=True)
+    result = prepared.drop_duplicates("digest").reset_index(drop=True)
+    result.attrs['preparation_counts'] = {
+        'input_messages': len(frame), 'empty_after_cleaning': len(frame) - nonempty_messages,
+        'messages_absorbed_in_threads': nonempty_messages - len(prepared),
+        'duplicate_conversations': len(prepared) - len(result), 'prepared_conversations': len(result)}
+    return result
 
 
 def temporal_split(data: pd.DataFrame, train_end: str, validation_end: str):
